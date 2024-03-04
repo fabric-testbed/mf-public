@@ -1,0 +1,30 @@
+
+# Set up Vouch Proxy Container
+
+
+  vouch-proxy:
+    # default port 9090
+    container_name: {{ install_name }}_vouch
+    image: fabrictestbed/vouch-proxy:0.27.1
+#    networks:
+#      - amgr-network
+
+#    volumes:
+#      - ./vouch:/config
+
+    volumes:
+      # config
+      - "{{ base_install_dir }}/vouch/config.yml:/config"
+      # data 
+      - "{{ base_data_dir }}/vouch_data:/data"
+
+    #ports:
+    #  - "127.0.0.1:9999:9090"
+
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "1024m" 
+        max-file: "5"
+    restart: always

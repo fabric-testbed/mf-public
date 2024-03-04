@@ -1,0 +1,37 @@
+
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: "{{ install_name }}_mimir" 
+    
+    #remove? hostname: {{ hostname }}
+    #depends_on:
+    #  - minio
+    command: 
+      - "-config.file=/etc/config/mimir.yml"
+      - "-target=all"
+      - "-ingester.ring.replication-factor=1"
+
+      #- "-distributor.request-rate-limit=40000"
+      #- "-distributor.request-burst-size=500000"
+      #- "-distributor.ingestion-rate-limit=44333"
+      #- "-distributor.ingestion-burst-size=888777"
+
+      # Since we are using one ingestor & new startup creates 60day burst(?) up the limits
+      # These could probably be reduced later
+      - "-distributor.request-rate-limit=500000"
+      - "-distributor.request-burst-size=500000"
+      - "-distributor.ingestion-rate-limit=500000"
+      - "-distributor.ingestion-burst-size=500000"  # default 200000
+      - "-ingester.max-global-series-per-user=5000000"  # default 150000
+      - "-validation.max-label-names-per-series=60" # default 30 
+
+
+    volumes:
+      - {{ base_install_dir }}/mimir/config/:/etc/config
+      - {{ base_data_dir }}/mimir/data:/data
+
+
+
+      #- ./config/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
+  
