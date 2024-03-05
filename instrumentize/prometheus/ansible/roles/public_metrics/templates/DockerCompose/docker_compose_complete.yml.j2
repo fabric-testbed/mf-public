@@ -23,7 +23,10 @@
 
 {% include './docker_compose_' + 'nginx' +  '_fragment.yml.j2' %}
 
+
+{% if ansible_host == "infrastructure-metrics" %}
 ##### VOUCH-PROXY #############################################################
 
 {% include './docker_compose_' + 'vouch' +  '_fragment.yml.j2' %}
 
+{% endif %}
