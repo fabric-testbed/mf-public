@@ -1,7 +1,7 @@
 ---
 # Add a file to the vouch-proxy config directory
 - name: Add Vouch-Proxy Config 
-  copy:
+  template:
     src: "templates/VouchProxy/vouch_config.yml.j2"
     dest: "{{ base_install_dir }}/vouch/config.yml"
     owner: "{{ prom_user_name }}"
