@@ -1,0 +1,22 @@
+# Run dash app with latency slice
+
+  dash-app:
+    container_name: public-metrics_latency
+    image: fabric-metrics-dash
+    volumes:
+      - ./latency:/code
+
+# for direct access testing only
+#    ports:
+#      - "7777:7070"  
+
+    environment:
+      - "PYTHONUNBUFFERED=1"
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "1024m"
+        max-file: "5"
+
+    restart: always

@@ -189,6 +189,129 @@
     become: yes
 
 
+#################
+#  FLASK APP    #
+#################
+
+- name: Create Flask Directories 
+  block:
+
+  - name: Create Directories for Flask
+    file: 
+      path: "{{ base_install_dir }}/flaskapp/{{ item }}"
+      recurse: yes
+      state: directory 
+      mode: 0755
+      owner: "{{ prom_user_name }}"
+      group: "{{ prom_group_name }}"
+    with_items:
+      - ['data','templates']
+    become: yes
+
+
+
+  - name: Copy Flask files
+    block:
+      - name: "Add Flask app files."
+        ansible.builtin.copy: 
+          src: 'files/flask_app/{{ item }}'
+          dest: "{{ base_install_dir }}/flaskapp/{{ item }}"
+          owner: "{{ prom_user_name }}"
+          group: "{{ prom_group_name }}"
+        with_items: ["app.py", "graph.py", "late_app.py", "load_data.py","templates/welcome.html"]   
+        #    "{{ grafana_plugin_files }}"
+
+    become: yes
+
+##### CHECK if acutally used
+  - name: Copy flask data files
+    block:
+      - name: "Add flask data files."
+        ansible.builtin.copy: 
+          src: 'files/flask_app/data/{{ item }}'
+          dest: "{{ base_install_dir }}/flaskapp/data/{{ item }}"
+          owner: "{{ prom_user_name }}"
+          group: "{{ prom_group_name }}"
+        with_items: ["sites.csv", "slice.csv"]   
+        #    "{{ grafana_plugin_files }}"
+
+    become: yes
+
+  - name: Copy flask influxdb config file
+    block:
+      - name: "Add flask influxdb config file."
+        ansible.builtin.template: 
+          src: 'templates/flask_app/influxdb.conf.j2'
+          dest: "{{ base_install_dir }}/flaskapp/influxdb.conf"
+          owner: "{{ prom_user_name }}"
+          group: "{{ prom_group_name }}"
+        
+    become: yes
+
+
+###################
+#  Latency DIRs   #
+###################
+
+- name: Create Latency Directories 
+  block:
+
+  - name: Create Directories for Latency
+    file: 
+      path: "{{ base_install_dir }}/latency/{{ item }}"
+      recurse: yes
+      state: directory 
+      mode: 0755
+      owner: "{{ prom_user_name }}"
+      group: "{{ prom_group_name }}"
+    with_items:
+      - ['data']
+    become: yes
+
+
+
+  - name: Copy Latency files
+    block:
+      - name: "Add Latency app files."
+        ansible.builtin.copy: 
+          src: 'files/latency/{{ item }}'
+          dest: "{{ base_install_dir }}/latency/{{ item }}"
+          owner: "{{ prom_user_name }}"
+          group: "{{ prom_group_name }}"
+        with_items: ["app.py", "graph.py", "load_data.py"]   
+        #    "{{ grafana_plugin_files }}"
+
+    become: yes
+
+
+
+  - name: Copy Latency data files
+    block:
+      - name: "Add Latency data files."
+        ansible.builtin.copy: 
+          src: 'files/latency/data/{{ item }}'
+          dest: "{{ base_install_dir }}/latency/data/{{ item }}"
+          owner: "{{ prom_user_name }}"
+          group: "{{ prom_group_name }}"
+        with_items: ["sites.csv", "slice.csv"]   
+        #    "{{ grafana_plugin_files }}"
+
+    become: yes
+
+
+  - name: Copy Latency config file
+    block:
+      - name: "Add Latency config file."
+        ansible.builtin.template: 
+          src: 'templates/latency/influxdb.conf.j2'
+          dest: "{{ base_install_dir }}/latency/influxdb.conf"
+          owner: "{{ prom_user_name }}"
+          group: "{{ prom_group_name }}"
+        
+    become: yes
+
+
+
 ####################
 #   PROMETHEUS     #
 ####################
@@ -319,13 +442,13 @@
 ####################
 #   VOUCH PROXY    #
 ####################
-
-- name: Setup Vouch-Proxy 
-  block: 
-    - name: Vouch-Proxy dirs 
-      include_tasks: VouchProxy/setup_vouch_directories_tasks.yml
-    - name: Vouch-Proxy config files 
-      include_tasks: VouchProxy/add_vouch_config_files.yml
+# no vouch on public site
+# - name: Setup Vouch-Proxy 
+#   block: 
+#     - name: Vouch-Proxy dirs 
+#       include_tasks: VouchProxy/setup_vouch_directories_tasks.yml
+#     - name: Vouch-Proxy config files 
+#       include_tasks: VouchProxy/add_vouch_config_files.yml
 
 
 # ##################

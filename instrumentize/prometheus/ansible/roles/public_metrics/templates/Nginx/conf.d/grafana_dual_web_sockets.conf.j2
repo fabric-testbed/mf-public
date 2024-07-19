@@ -3,17 +3,16 @@
 # grafana has user accounts so no htaccess needed
 
 #server {
-#        listen	443 ssl http2;
+#        listen 443 ssl http2;
 #        listen [::]:443 ssl http2;
-#        server_name {{ hostname }};
-#        
+#        server_name public-metrics;
+#
 #        include /etc/nginx/ssl_snippet.conf;
-#                
+#
 #        location /grafana/ {
-#                proxy_pass http://{{ install_name }}_grafana:3000/;
+#                proxy_pass http://public-metrics_grafana:3000/;
 #        }
 #}
-
 
 
 
@@ -27,28 +26,79 @@ server {
   #listen 80;
   listen 443 ssl http2;
   listen [::]:443 ssl http2;
-  server_name {{ hostname }};
+  server_name public-metrics;
 
   include /etc/nginx/ssl_snippet.conf;
+
+
+location ^~ /static/ {
+        root /usr/share/nginx/html;
+}
+
+
+
+
+#        location /prometheus {
+#proxy_set_header X-Scope-OrgID public-data;
+#            proxy_pass http://public-metrics_mimir:8080/prometheus;
+#        }
+
+#        location /promql {
+#proxy_set_header X-Scope-OrgID public-data;
+#            proxy_pass http://public-metrics_mimir:8080/prometheus/api/v1;
+#        }
+
+#  curl https://public-metrics.fabric-testbed.net/promql2\?query\=node_load1
+        location /promql2 {
+proxy_set_header X-Scope-OrgID public-data;
+            proxy_pass http://public-metrics_mimir:8080/prometheus/api/v1/query;
+        }
+
+
+
+        location /latency {
+                #proxy_pass http://public-metrics_latency:7070;
+                proxy_pass http://public-metrics_latency:7070/latency;
+        }
+
+
+        location / {
+                #proxy_pass http://public-metrics_latency:7070;
+                proxy_pass http://public-metrics_flask_app:7070/welcome;
+        }
+
+
+        location /weather {
+                proxy_pass http://public-metrics_flask_app:7070/weather;
+        }
+
 
 #  root /usr/share/nginx/www;
 #  index index.html index.htm;
 
   location /grafana/ {
+
+    #auth_basic "Grafana Access";
+    #auth_basic_user_file /etc/nginx/htpasswd;
+
     rewrite  ^/grafana/(.*)  /$1 break;
-    proxy_set_header Host $http_host; 
+    proxy_set_header Host $http_host;
     #proxy_pass http://localhost:3000/;
-    proxy_pass http://{{ install_name }}_grafana:3000/;
+    proxy_pass http://public-metrics_grafana:3000/;
   }
 
   # Proxy Grafana Live WebSocket connections.
   location /grafana/api/live {
+
+    #auth_basic "Grafana Access";
+    #auth_basic_user_file /etc/nginx/htpasswd;
+
     rewrite  ^/grafana/(.*)  /$1 break;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
     proxy_set_header Host $http_host;
     #proxy_pass http://localhost:3000/;
-    proxy_pass http://{{ install_name }}_grafana:3000/;
+    proxy_pass http://public-metrics_grafana:3000/;
   }
 }

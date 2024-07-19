@@ -3,7 +3,7 @@
   nginx:
     container_name: "{{ install_name }}_nginx"
 
-    image: nginx:1.19
+    image: nginx:1.26
     volumes:
       #
       - "{{ base_install_dir }}/nginx/html:/usr/share/nginx/html"

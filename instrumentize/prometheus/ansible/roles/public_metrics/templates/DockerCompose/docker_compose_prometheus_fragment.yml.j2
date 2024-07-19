@@ -11,6 +11,7 @@
       - "{{ base_install_dir }}/prometheus/secrets:/etc/prometheus/secrets/"
       # TSDB, WAL, chunks
       - "{{ base_data_dir }}/prometheus:/prometheus"
+
     # ports: 
     #   - 9090:9090
 
@@ -22,8 +23,7 @@
       - '--web.enable-lifecycle'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
-      # breaks connection to sidecar - '--web.external-url={{ ansible_host }}'  # This maybe correct for fabric racks etc, but maybe not for other cases
-    
+
     logging:
       driver: json-file
       options:

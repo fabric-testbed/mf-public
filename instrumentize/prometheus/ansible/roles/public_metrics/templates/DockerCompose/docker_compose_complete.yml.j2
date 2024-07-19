@@ -23,10 +23,10 @@
 
 {% include './docker_compose_' + 'nginx' +  '_fragment.yml.j2' %}
 
+##### FLASK APP ###############################################################
 
-{% if ansible_host == "infrastructure-metrics" %}
-##### VOUCH-PROXY #############################################################
+{% include './docker_compose_' + 'flask_app' +  '_fragment.yml.j2' %}
 
-{% include './docker_compose_' + 'vouch' +  '_fragment.yml.j2' %}
+##### LATENCY - DASH APP ######################################################
 
-{% endif %}
+{% include './docker_compose_' + 'latency_app' +  '_fragment.yml.j2' %}

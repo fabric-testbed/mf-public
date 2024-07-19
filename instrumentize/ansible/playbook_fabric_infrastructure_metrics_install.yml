@@ -4,5 +4,5 @@
 - hosts: infra-metrics
 
   roles:
-    - role: ../../prometheus/ansible/roles/public_metrics
+    - role: ../../prometheus/ansible/roles/infrastructure_metrics
 

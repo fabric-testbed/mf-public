@@ -6,11 +6,6 @@
     # default port 9090
     container_name: {{ install_name }}_vouch
     image: fabrictestbed/vouch-proxy:0.27.1
-#    networks:
-#      - amgr-network
-
-#    volumes:
-#      - ./vouch:/config
 
     volumes:
       # config
@@ -20,7 +15,6 @@
 
     #ports:
     #  - "127.0.0.1:9999:9090"
-
 
     logging:
       driver: json-file

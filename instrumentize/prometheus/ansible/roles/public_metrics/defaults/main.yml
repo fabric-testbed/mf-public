@@ -28,17 +28,17 @@ minio_username: fab_minio
 minio_port: 9000
 minio_console_port: 9099
 
-
 ####################
 #     Grafana      #
 ####################
 
 grafana_files_dir: files/Grafana
 grafana_plugin_files: [] 
-#   - flant-statusmap-panel-v0.4.1.tar
+#   - flant-statusmap-panel-v0.4.1.tar 
 
 grafana_datasource_template_files:
-  - grafana_local_prometheus_datasource.yml
+  # Note can only use one default datasorce.
+  # add prometheus manually so it can be hidden form default org  - grafana_local_prometheus_datasource.yml
   - grafana_local_mimir_datasource.yml
 
 grafana_templates_dir: templates/Grafana
@@ -49,17 +49,9 @@ grafana_user_name: grafana
 grafana_user_id: 472
 grafana_group_name: root  
 
-#grafana_datasource_template_files: 
-  # Note can only use one default datasorce.
-  #- grafana_local_prometheus_datasource.yml
-  #- grafana_thanos_datasource.yml
-
-
 # TODO change these values
 external_rack_label: odp
 prometheus_name: {hostname}
-      
-
 
 
 ####################
@@ -95,10 +87,10 @@ nginx_ip_ports:
 nginx_template_dir: templates/Nginx
 
 nginx_server_confd_template_files: 
-  - mimir.conf
-  - prometheus_dual.conf
   - grafana_dual_web_sockets.conf
+  - mimir.conf
   - public_minio.conf
+  - prometheus_dual.conf
 
 nginx_config_template_files:
   - ssl_snippet.conf

@@ -1,0 +1,22 @@
+# Run flask app to verify jwt
+
+  flask-app:
+    container_name: public-metrics_flask_app
+    image: fabric-metrics-flask
+    volumes:
+      - ./flaskapp:/code
+
+# for direct access testing only
+#    ports:
+#      - "7777:7070"  
+
+    environment:
+      - "PYTHONUNBUFFERED=1"
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "1024m"
+        max-file: "5"
+
+    restart: always
