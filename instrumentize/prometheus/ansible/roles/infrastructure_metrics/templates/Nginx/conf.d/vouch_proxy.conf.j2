@@ -1,0 +1,256 @@
+# this is required to proxy Grafana Live WebSocket connections.
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
+
+# Vouch-Proxy
+server {
+        listen  443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name infrastructure-metrics;
+
+        include /etc/nginx/ssl_snippet.conf;
+
+        charset utf-8;
+        large_client_header_buffers 4 32k;
+
+location ^~ /static/ {
+        root /usr/share/nginx/html;
+}
+
+    # Cache configuration
+    open_file_cache max=1000 inactive=20s;
+    open_file_cache_valid 30s;
+    open_file_cache_min_uses 5;
+    open_file_cache_errors off;
+
+        location / {
+                proxy_pass http://infrastructure-metrics_flask_app:7070/welcome;
+       }
+
+
+
+#   location = /validate2 {
+#        proxy_pass http://infrastructure-metrics_flask_app:7070/login;
+#}
+#
+
+    location = /validate {
+
+
+        # forward the /validate request to Vouch Proxy
+        proxy_pass http://infrastructure-metrics_vouch-proxy:9090/validate;
+
+
+        #proxy_pass http://infrastructure-metrics_flask_app/validate;
+        #proxy_pass http://infrastructure-metrics_flask_app:7070/show_headers;
+
+        #proxy_pass http://infrastructure-metrics_flask_app:7070/isit;
+        #proxy_pass http://infrastructure-metrics_flask_app:7070/check_session;
+        #proxy_pass http://infrastructure-metrics_flask_app:7070/login;
+
+        # be sure to pass the original host header
+        proxy_set_header Host $http_host;
+
+        # Vouch Proxy only acts on the request headers
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+
+        ### AUTH REQUEST SET ###
+        # optionally add X-Vouch-User as returned by Vouch Proxy along with the request
+        auth_request_set $auth_resp_x_vouch_user $upstream_http_x_vouch_user;
+
+        # optinally add X-Vouch-IdP-IdToken, X-Vouch-IdP-AccessToken or X-Vouch-IdP-RefreshToken
+        auth_request_set $auth_resp_x_vouch_idp_idtoken $upstream_http_x_vouch_idp_idtoken;
+        #auth_request_set $auth_resp_x_vouch_idp_accesstoken $upstream_http_x_vouch_idp_accesstoken;
+        #auth_request_set $auth_resp_x_vouch_idp_refreshtoken $upstream_http_x_vouch_idp_refreshtoken;
+
+        # these return values are used by the @error401 call
+        auth_request_set $auth_resp_jwt $upstream_http_x_vouch_jwt;
+        auth_request_set $auth_resp_err $upstream_http_x_vouch_err;
+        auth_request_set $auth_resp_failcount $upstream_http_x_vouch_failcount;
+}
+
+
+
+
+  # if validate returns `401 not authorized` then forward the request to the error401block
+    error_page 401 = @error401;
+
+    location @error401 {
+        proxy_set_header Host $http_host;
+        # redirect to Vouch Proxy for login
+        #return 302 http://$host:9090/login?url=$scheme://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
+        ###return 302 https://$host/login?url=$scheme://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
+        return 302 https://$host/login;
+
+        # you usually *want* to redirect to Vouch running behind the same Nginx config proteced by https
+        # but to get started you can just forward the end user to the port that vouch is running on
+    }
+
+
+
+
+
+  # if validate returns `403 forbiden` then forward the request to the error403block
+    error_page 403 = @error403;
+
+    location @error403 {
+        proxy_set_header Host $http_host;
+        # redirect to Vouch Proxy for login
+        ###return 302 https://$host/login?url=$scheme://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
+        return 302 https://$host/login;
+
+        # you usually *want* to redirect to Vouch running behind the same Nginx config proteced by https
+        # but to get started you can just forward the end user to the port that vouch is running on
+    }
+
+
+
+
+
+
+##location /vp {
+##        proxy_pass http://infrastructure-metrics_vouch-proxy:9090/auth;
+##}
+
+##location /vl {
+##        proxy_pass http://infrastructure-metrics_flask_app:7070/login;
+##}
+
+##location /vc {
+##        proxy_pass http://infrastructure-metrics_flask_app:7070/cookie_check;
+##}
+
+##location /vcs {
+##        proxy_pass http://infrastructure-metrics_flask_app:7070/check_session;
+##}
+
+location /welcome{
+        proxy_pass http://infrastructure-metrics_flask_app:7070/welcome;
+}
+
+
+
+##location /flask_stuff {
+##        proxy_pass http://infrastructure-metrics_flask_app:7070/static;
+##}
+
+##location /static {
+##        proxy_pass http://infrastructure-metrics_flask_app:7070/static;
+##}
+
+location /auth_grafana{
+        proxy_pass http://infrastructure-metrics_flask_app:7070/set_fabric_user_session;
+}
+
+location /logout_grafana{
+        proxy_pass http://infrastructure-metrics_flask_app:7070/clear_fabric_user_session;
+}
+
+
+##location /clear_fabric_service_cookie {
+##        proxy_pass http://infrastructure-metrics_flask_app:7070/clear_fabric_service_cookie;
+##}
+
+
+###### Good - Send user to CiLogon
+    location /login {
+        # these return values are used by the @error401 call
+        auth_request_set $auth_resp_jwt $upstream_http_x_vouch_jwt;
+        auth_request_set $auth_resp_err $upstream_http_x_vouch_err;
+        auth_request_set $auth_resp_failcount $upstream_http_x_vouch_failcount;
+
+        # redirect to Vouch Proxy for login
+        # redirect to Vouch Proxy for login
+        #proxy_pass http://infrastructure-metrics_vouch-proxy:9090/login?url=$scheme://$http_host;
+        proxy_pass http://infrastructure-metrics_vouch-proxy:9090/login?url=https://infrastructure-metrics.fabric-testbed.net;
+    }
+
+###### ? logout
+    location /logout {
+        # redirect to Vouch Proxy for logout
+        #proxy_pass http://infrastructure-metrics_vouch-proxy:9090;
+        #proxy_pass http://infrastructure-metrics_vouch-proxy:9090/logout?url=$scheme://$http_host;
+        proxy_pass http://infrastructure-metrics_vouch-proxy:9090/logout?url=https://infrastructure-metrics.fabric-testbed.net/welcome; #logout_grafana;
+
+        # nope goto flask app/logout
+        #proxy_pass http://infrastructure-metrics_flask_app:7070/logout;
+
+    }
+
+
+
+
+##### Good - Cilogon redirects here
+#        location /vouch/cilogon/redirect {
+        # redirect to Vouch Proxy for authentication with OIDC client
+        # Callback URL (relative to host) must be defined in both OIDC client and vouch/config
+
+   #     proxy_pass http://infrastructure-metrics_flask_app:7070/login;
+ #       proxy_pass http://infrastructure-metrics_flask_app:7070/welcome;
+        # then flask_app will redirect to grafana
+  #  }
+
+
+
+   location /auth {
+        # redirect to Vouch Proxy for authentication with OIDC client
+        # Callback URL (relative to host) must be defined in both OIDC client and vouch/config
+
+        # Must go to auth since vouch proxy sets the cookie at that point
+        proxy_pass http://infrastructure-metrics_vouch-proxy:9090/auth;
+
+
+        #proxy_pass http://infrastructure-metrics_flask_app:7070/login;
+        #proxy_pass http://infrastructure-metrics.fabric-testbed.net:9999/auth;
+    }
+
+
+
+#    location /vouch/cilogon/redirect {
+        # redirect to Vouch Proxy for authentication with OIDC client
+        # Callback URL (relative to host) must be defined in both OIDC client and vouch/config
+#        proxy_pass http://infrastructure-metrics_vouch-proxy:9090/auth;
+        #proxy_pass http://infrastructure-metrics.fabric-testbed.net:9999/auth;
+#    }
+
+
+
+
+
+
+
+
+
+################### GRAFANA #####################
+
+
+  location /validate_grafana {
+    proxy_pass http://infrastructure-metrics_flask_app:7070/check_fabric_user_session;
+}
+
+
+  location /grafana/ {
+    auth_request /validate_grafana;
+    rewrite  ^/grafana/(.*)  /$1 break;
+    proxy_set_header Host $http_host;
+    #proxy_pass http://localhost:3000/;
+    proxy_pass http://infrastructure-metrics_grafana:3000/;
+  }
+
+  # Proxy Grafana Live WebSocket connections.
+  location /grafana/api/live {
+    auth_request /validate_grafana;
+    rewrite  ^/grafana/(.*)  /$1 break;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $http_host;
+    #proxy_pass http://localhost:3000/;
+    proxy_pass http://infrastructure-metrics_grafana:3000/;
+  }
+
+}

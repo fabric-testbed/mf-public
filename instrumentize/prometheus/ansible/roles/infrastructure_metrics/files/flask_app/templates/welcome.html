@@ -1,0 +1,69 @@
+<html>
+<style>
+body {
+  background-color: #DDEEFB;
+}
+</style>
+
+        <body>
+
+
+                <figure>
+                        <center><img src="/static/fabric_logo.png", width="515", height="300"/></center>
+                        <figcaption>
+                                <center>
+                                        <h1>Welcome to FABRIC Infrastructure Metrics</h1>
+                                </center>
+                        </figcaption>
+                </figure>
+
+
+
+{% if err_msg %}
+                <h2> {{ err_msg }}  </h2>
+
+                <p>Any FABRIC user may <a href="/login"> Login Here </a> to access metrics via the Grafana interface.
+{% else %}
+
+
+
+        {% if cilogon_status %}
+                        {% if fabric_user_session %}
+                                <a href="/grafana"> Grafana </a>
+                        {% else %}
+                                Redirecting to Grafana... or click <a href="/auth_grafana"> Auth Grafana </a> to continue.
+        <script> function goto_auth_grafana(){ window.location.replace("/auth_grafana"); }
+                setTimeout("goto_auth_grafana()", 1000);
+         </script>
+                        {% endif %}
+
+
+
+
+
+
+        {% else %}
+
+                   {% if fabric_user_session %}
+                        Logging Out of Grafana... or click <a href="/logout_grafana"> Logout Grafana </a> to continue.
+                        <script> function goto_logout_grafana(){ window.location.replace("/logout_grafana"); }
+                                setTimeout("goto_logout_grafana()", 1000);
+                        </script>
+
+                   {% endif %}
+
+
+                <center>
+                         <p>This site allows FABRIC users access to metrics regarding the FABRIC infrastructure.
+                         <p>Any FABRIC user may <a href="/login"> Login Here </a> to access metrics via the Grafana interface.
+                         <p>View ESnet Optical Data Dashboards at <a href="https://public.stardust.es.net/dashboards/f/qdmDZ1_4k/fabric"> ESnet </a>
+                </center>
+
+        {% endif %}
+
+
+{% endif %}
+
+
+        </body>
+</html>
