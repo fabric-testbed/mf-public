@@ -6,6 +6,7 @@
         path: "{{ base_install_dir }}/nginx/{{ item }}"
         state: directory
         recurse: yes
+        mode: 0755
         owner: "{{ prom_user_name }}"
         group: "{{ prom_group_name }}"
       with_items:
@@ -20,6 +21,5 @@
         owner: "{{ prom_user_name }}"
         group: "{{ prom_group_name }}"
         mode: 0644
-
 
   become: yes

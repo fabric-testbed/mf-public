@@ -6,6 +6,7 @@
     backup: yes
     src: "{{ prometheus_templates_dir }}/{{ item }}.j2"
     dest: "{{ base_install_dir }}/prometheus/config/{{ item }}"
+    mode: 0664
     owner: "{{ prom_user_name }}"
     group: "{{ prom_group_name }}"
   with_items: "{{ prometheus_target_templates }}"

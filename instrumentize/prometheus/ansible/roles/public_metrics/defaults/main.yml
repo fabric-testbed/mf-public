@@ -33,8 +33,7 @@ minio_console_port: 9099
 ####################
 
 grafana_files_dir: files/Grafana
-grafana_plugin_files: [] 
-#   - flant-statusmap-panel-v0.4.1.tar 
+grafana_plugin_files: []  
 
 grafana_datasource_template_files:
   # Note can only use one default datasorce.
@@ -50,7 +49,7 @@ grafana_user_id: 472
 grafana_group_name: root  
 
 # TODO change these values
-external_rack_label: odp
+external_rack_label: podc
 prometheus_name: {hostname}
 
 
@@ -77,9 +76,7 @@ prometheus_secrets: []
 
 nginx_ip_ports:
   - 443:443  # grafana web page
-  - 9090:9090     # prometheus stats
-  #- 10902:10902   # thanos sidecar stats
-  ##- 10901:10901 # thanos sidecar 
+  - 9090:9090     # prometheus stats 
   - 9009:9009  # mimir
   - 9000:9000 # minio s3
   - 9099:9099 # minio web ui

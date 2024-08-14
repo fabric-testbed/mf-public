@@ -5,6 +5,7 @@
   template:
     src: "{{ nginx_template_dir }}/conf.d/{{ item }}.j2"
     dest: "{{ base_install_dir }}/nginx/conf.d/{{ item }}"
+    mode: 0664
     owner: "{{ prom_user_name }}"
     group: "{{ prom_group_name }}"
   with_items: "{{ nginx_server_confd_template_files }}"

@@ -6,6 +6,7 @@
       file:
         path: "{{ base_install_dir }}/grafana/{{ item }}"
         state: directory
+        mode: 0755
         recurse: yes
         owner: "{{ grafana_user_name }}"
         group: "{{ grafana_group_name }}"
@@ -17,6 +18,7 @@
         path: "{{ base_data_dir }}/grafana/{{ item }}"
         state: directory
         recurse: yes
+        mode: 0755
         owner: "{{ grafana_user_name }}"
         group: "{{ grafana_group_name }}"
       with_items:
