@@ -69,7 +69,6 @@
   ignore_errors: true
 
 
-
 ##############################
 #  Mount OPT/DATA Directory  #
 ##############################
@@ -82,7 +81,6 @@
     - mount_data_drive #== yes
 
 
-
 ####################     
 #      USER        #
 ####################
@@ -90,52 +88,6 @@
   # Create a user to setup all the fab monitoring stuff under.
   include_tasks: setup_tasks/create_prom_user_tasks.yml
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-################
-#  USER SETUP  #
-################
-
-#### no longer needed since minio is separate
-
-# # CREATE USER minio_user #
-# - name: "Setup Minio User"
-#   block:
-#     - name: "Create Minio user as minio_user"
-#       user:
-#         name: "{{ minio_username }}"
-#         shell: /usr/sbin/nologin
-#         system: true
-#         create_home: false
-#         home: /
-#   become: yes
-
-# # GET USER minio  uid:gid #
-# - name: "Get Minio User"
-#   block:
-#     - name: "Get Fabric Prometheus user ids"
-#       getent:
-#         database: passwd
-#         key: fab-minio
-#     - debug:
-#        var: ansible_facts.getent_passwd
-
-#     - set_fact:
-#         minio_user_uid: "{{ getent_passwd['fab-minio'][1] }}"
-#         minio_user_gid: "{{ getent_passwd['fab-minio'][2] }}"
-#     # the need to assign it to a var so we can use in later
-#   become: yes
 
 
 #################
