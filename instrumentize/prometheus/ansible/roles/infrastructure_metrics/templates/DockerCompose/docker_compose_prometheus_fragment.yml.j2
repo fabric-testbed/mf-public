@@ -2,8 +2,7 @@
   prometheus:
     container_name: "{{ install_name }}_prometheus"
     image: prom/prometheus:v2.33.4
-    # TODO revisit/document user settings for this container
-    user: 0:0
+    user: "{{ prom_user_uid }}:{{ prom_user_gid }}"
     volumes:      
       # config files
       - "{{ base_install_dir }}/prometheus/config:/etc/prometheus/config/"
