@@ -1,12 +1,16 @@
 # Mimir
 
     server {
-        listen 9009 ssl http2;
-        listen [::]:9009 ssl http2;
-
+        listen 9009 ssl;
+        listen [::]:9009 ssl;
+        http2 on;
 
         include /etc/nginx/ssl_snippet.conf;
+
+        resolver 127.0.0.11 valid=30s;
+
         location / {
-            proxy_pass http://{{ install_name }}_mimir:8080;
+            set $mimir_upstream http://{{ install_name }}_mimir:8080;
+            proxy_pass $mimir_upstream;
         }
     }

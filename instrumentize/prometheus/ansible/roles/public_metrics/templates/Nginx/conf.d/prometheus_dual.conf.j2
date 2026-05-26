@@ -1,8 +1,9 @@
 
 # Prometheus status page - Add SSL & htaccess
 server {
-        listen  9090 ssl http2;
-        listen [::]:9090 ssl http2;
+        listen  9090 ssl;
+        listen [::]:9090 ssl;
+        http2 on;
         server_name {{ hostname }};
 
         include /etc/nginx/ssl_snippet.conf;
