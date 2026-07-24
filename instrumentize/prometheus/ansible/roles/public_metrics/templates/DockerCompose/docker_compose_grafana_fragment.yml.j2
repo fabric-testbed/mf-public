@@ -14,7 +14,8 @@
       - "{{ base_install_dir }}/grafana/plugins/:/var/lib/grafana/plugins"
       # custom init settings dir
       - "{{ base_install_dir }}/grafana/custom:/etc/grafana/custom/"
-      # Map the node certs for CiLogon TLS in  custom.ini.
+      # Only needed when CiLogon is configured for Grafana auth. Nginx handles SSL termination otherwise.
+      # TODO Check if the infrastructure needs this or if it is a remnant from the operators grafana
       - "{{ grafana_cert }}:/etc/grafana/certs/cert:ro"
       - "{{ grafana_key }}:/etc/grafana/certs/key:ro"
 

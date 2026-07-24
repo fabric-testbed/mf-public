@@ -46,7 +46,8 @@ grafana_cert:  "{{ host_cert }}"
 grafana_key:  "{{ host_key }}"
 grafana_user_name: grafana
 grafana_user_id: 472
-grafana_group_name: root  
+grafana_group_name: grafana
+grafana_group_id: 472
 
 # TODO change these values
 external_rack_label: podc
