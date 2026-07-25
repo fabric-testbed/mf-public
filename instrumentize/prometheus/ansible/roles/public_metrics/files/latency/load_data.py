@@ -1,19 +1,13 @@
+import os
 import configparser
 import pandas as pd
 from influxdb_client_3 import InfluxDBClient3
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
 import pyarrow as pa
 
-'''
-Requirements
------------
-sites.csv: site, lon, lat (for all sites)
-slice.csv: site, ip_address, node_name
-data.csv: (downloaded from InfluxDB) latency, received, receiver, sender, seq_n, DateTime
 
-'''
-
-def get_geoloc_df(sites_file='./data/sites.csv', slice_file='./data/slice.csv'):
-    print("get_deo_df")
+def get_geoloc_df(sites_file, slice_file):
     all_sites_df = pd.read_csv(sites_file)
     slice_df = pd.read_csv(slice_file)
     slice_df = slice_df.merge(all_sites_df)
@@ -21,54 +15,22 @@ def get_geoloc_df(sites_file='./data/sites.csv', slice_file='./data/slice.csv'):
     return slice_df
 
 
-def load_manually_downloaded_csv(file_path='./data/downloaded_data.csv'):
-    print("load manually downlaod csv")
-    latency_df = pd.read_csv(file_path, header=0, comment="#")
 
-    # For some reason there is an unwanted column when manually downloaded.
-    # Delete that.
-    latency_df.drop('Unnamed: 0', axis=1, inplace=True)
-
-    # Convert Unix epoch time to datetime64 type
-    latency_df['received'] = pd.to_datetime(latency_df['received'], unit='s')
-
-    return latency_df
-
-
-def load_current_latency_csv(duration='15 minute', file_path='./data/data.csv'):
-
-    print("load current latency csv")
-
-    '''
-    Return latency data as Pandas Dataframe.
-    If file_path (str) is given, table will use the saved csv file.
-    Otherwise, download the latest data from InfluxDB
-    '''
-
-    download_influx_data(duration=duration, outfile=file_path)
-
-    # Create Dataframe of latency data and add column names
-    latency_df = pd.read_csv(file_path, header=0, comment="#",
-                names=["latency","received","receiver","sender","seq_n","time"])
-
-
-    # Convert Unix epoch time to datetime64 type
-    #latency_df['received'] = pd.to_datetime(latency_df['received'], unit='s')
-
-    return latency_df
-
-
-def download_influx_data(duration='15 minute', outfile='./data/data.csv',
+def download_influx_data(conf_path, duration='15 minute', outfile=None,
                           src_dst=None):
-    print("download influx data")
     '''
-    duration(str): '1 minute', '5 minutes', '3 hours', '2 days' etc.
-    src_dst(tuple): (<str>, <str>) example: ("10.0.0.1", "10.0.1.1")
+    Input:
+        duration(str): '1 minute', '5 minutes', '3 hours', '2 days' etc.
+        outfile(str): None or 'path/to/out.csv'
+        src_dst(tuple): (<str>, <str>) example: ("10.0.0.1", "10.0.1.1")
+
+    Output:
+        Dataframe: (['latency', 'received', 'receiver', 'sender', 'seq_n', 'time'])
     '''
 
     # Read InfluxDB conf
     config = configparser.ConfigParser()
-    config.read('influxdb.conf')
+    config.read(conf_path)
 
     host = config['InfluxDB']['host']
     token = config['InfluxDB']['token']
@@ -95,7 +57,7 @@ def download_influx_data(duration='15 minute', outfile='./data/data.csv',
 
         query += path_filter
 
-    #print(query)
+    print(query)
 
     table = client.query(query=query,
                         database=database,
@@ -110,5 +72,79 @@ def download_influx_data(duration='15 minute', outfile='./data/data.csv',
 
     # Convert Unix epoch time to datetime64 type
     latency_df['received'] = pd.to_datetime(latency_df['received'], unit='s')
+
+    return latency_df
+
+
+def download_influx_data_local(conf_path, duration='5 minutes', outfile=None,
+                          src_dst=('10.0.0.1', '10.0.0.2')):
+    '''
+    Input:
+        duration(str): '1 minute', '5 minutes', '3 hours', '2 days' etc.
+        outfile(str): None or 'path/to/out.csv'
+        src_dst(tuple): (<str>, <str>) example: ("10.0.0.1", "10.0.1.1")
+
+    Output:
+        Dataframe: (['latency', 'received', 'receiver', 'sender', 'seq_n', 'time'])
+    '''
+
+    # Read InfluxDB conf
+    config = configparser.ConfigParser()
+    config.read(os.path.join(conf_path))
+
+    host = config['InfluxDB']['host']
+    token = config['InfluxDB']['token']
+    org = config['InfluxDB']['org']
+    database = config['InfluxDB']['database']
+
+    print(f'host {host}, token: {token}, org: {org}, database: {database}')
+
+    client = InfluxDBClient(url=host, token=token, org=org)
+
+
+
+    query_api = client.query_api()
+
+    time_conversion = {'5 minutes': '-5m',
+                       '15 minutes': '-15m',
+                       '30 minutes': '-30m',
+                       '1 hour': '-1h',
+                       '3 hours': '-3h',
+                       '6 hours': '-6h',
+                       '12 hours': '-12h',
+                       '24 hours': '-24h'}
+
+    converted_duration = time_conversion[duration]
+    print(f"querying {converted_duration}")
+
+    query = f"""from(bucket: "{database}")
+     |> range(start: {converted_duration})
+     |> filter(fn: (r) => r._measurement == "owl")
+     |> filter(fn: (r) => r._field == "latency" or r._field == "received" or r._field == "seq_n")
+     |> filter(fn: (r) => r.sender == "{src_dst[0]}")
+     |> filter(fn: (r) => r.receiver =="{src_dst[1]}")
+     |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")"""
+
+    print(query)
+
+    #tables = query_api.query(query, org="fabric")
+    #
+    #for table in tables:
+    #  for record in table.records:
+    #    print(record)
+
+
+    df = query_api.query_data_frame(query, org=org)
+
+    latency_df = df[['latency', 'received', 'receiver', 'sender', 'seq_n', '_time']]
+    # Convert Unix epoch time to datetime64 type
+    latency_df['received'] = pd.to_datetime(latency_df['received'], unit='s')
+
+    if outfile:
+        latency_df.to_csv(outfile, index=True)
+
+
+    print(latency_df)
+
 
     return latency_df

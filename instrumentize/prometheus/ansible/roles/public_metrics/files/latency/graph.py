@@ -3,9 +3,7 @@ import plotly.express as px
 import load_data as data_loader
 
 
-sites_df = data_loader.get_geoloc_df()
-
-def generate_line_graph(src, dst, data):
+def generate_line_graph(sites_df, src, dst, data):
 
     src_ip = sites_df.loc[sites_df['site'].str.contains(src), 'ip_address'].item()
     dst_ip = sites_df.loc[sites_df['site'].str.contains(dst), 'ip_address'].item()
@@ -32,7 +30,7 @@ def generate_line_graph(src, dst, data):
     return line_fig
 
 
-def generate_map(src, dst):
+def generate_map(sites_df, src, dst):
     map_fig = go.Figure()
 
     map_fig.add_trace(go.Scattergeo(
